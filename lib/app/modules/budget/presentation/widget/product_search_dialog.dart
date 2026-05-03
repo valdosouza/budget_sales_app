@@ -40,8 +40,8 @@ class _ProductSearchDialogState extends State<ProductSearchDialog>
 
   final _descCtrl = TextEditingController();
   final _codeCtrl = TextEditingController();
+  final _barCtrl = TextEditingController();
   final _groupCtrl = TextEditingController();
-  final _brandCtrl = TextEditingController();
 
   bool _showFilters = false;
   final _currencyFmt = NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
@@ -58,26 +58,23 @@ class _ProductSearchDialogState extends State<ProductSearchDialog>
     _tabController.dispose();
     _descCtrl.dispose();
     _codeCtrl.dispose();
+    _barCtrl.dispose();
     _groupCtrl.dispose();
-    _brandCtrl.dispose();
     super.dispose();
   }
 
   void _search() {
     final code = _codeCtrl.text.trim();
-    final numericId = int.tryParse(code);
+    final bar = _barCtrl.text.trim();
+    final parsed = int.tryParse(code);
+    final isProductId = parsed != null && parsed > 0 && parsed <= 2147483647;
 
     _bloc.add(ProductSearchLoad(
-      // Código numérico → busca produto único por ID interno
-      id: numericId,
-      // Código não-numérico → passa como codeFactory para usar search da API
-      codeFactory: (numericId == null && code.isNotEmpty) ? code : null,
-      description:
-          _descCtrl.text.trim().isEmpty ? null : _descCtrl.text.trim(),
-      groupDescription:
-          _groupCtrl.text.trim().isEmpty ? null : _groupCtrl.text.trim(),
-      brandDescription:
-          _brandCtrl.text.trim().isEmpty ? null : _brandCtrl.text.trim(),
+      codeBar: bar.isNotEmpty ? bar : null,
+      id: (bar.isEmpty && isProductId) ? parsed : null,
+      codeFactory: (bar.isEmpty && !isProductId && code.isNotEmpty) ? code : null,
+      description: _descCtrl.text.trim().isEmpty ? null : _descCtrl.text.trim(),
+      groupDescription: _groupCtrl.text.trim().isEmpty ? null : _groupCtrl.text.trim(),
     ));
   }
 
@@ -91,7 +88,7 @@ class _ProductSearchDialogState extends State<ProductSearchDialog>
     Navigator.of(context).push(MaterialPageRoute(
       builder: (_) => _BarcodeScannerPage(
         onDetected: (code) {
-          _codeCtrl.text = code;
+          _barCtrl.text = code;
           _bloc.add(ProductSearchLoad(codeBar: code));
         },
       ),
@@ -193,12 +190,13 @@ class _ProductSearchDialogState extends State<ProductSearchDialog>
             Row(children: [
               Expanded(
                 child: TextField(
-                  controller: _brandCtrl,
+                  controller: _barCtrl,
                   decoration: const InputDecoration(
-                    labelText: 'Marca',
+                    labelText: 'Código de Barras',
                     isDense: true,
                     border: OutlineInputBorder(),
                   ),
+                  keyboardType: TextInputType.number,
                   onSubmitted: (_) => _search(),
                 ),
               ),
