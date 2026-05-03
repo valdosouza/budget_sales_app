@@ -1,0 +1,17 @@
+import 'package:budget_sales/app/modules/order_sale_register/data/model/order_sale_main_card_model.dart';
+import 'package:budget_sales/app/modules/order_sale_register/presentation/widget/register/payment/payment_info_dinheiro_widget.dart';
+import 'package:budget_sales/app/modules/order_sale_register/presentation/widget/register/payment/payment_info_pix_widget.dart';
+import 'package:budget_sales/app/modules/order_sale_register/presentation/widget/register/payment/payment_info_troco_widget.dart';
+
+import 'package:flutter/material.dart';
+
+Widget paymentAVista(OrderSaleMainCardModel modelOrderSale) {
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: <Widget>[
+      PaymentInfoCash(modelOrderPaid: modelOrderSale.payments),
+      PaymentInfoPix(modelOrderPaid: modelOrderSale.payments),
+      paymentinfotroco(modelOrderSale),
+    ],
+  );
+}

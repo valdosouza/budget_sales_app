@@ -1,0 +1,59 @@
+import 'package:budget_sales/app/core/shared/utils/function.dart';
+import 'package:flutter/material.dart';
+
+import 'package:budget_sales/app/core/shared/model/order_paid_model.dart';
+import 'package:budget_sales/app/modules/order_sale_register/presentation/widget/register/ordersale/header_field_widget.dart';
+
+class PaymentInfoCashHistoric extends StatefulWidget {
+  final List<OrderPaidModel> modelOrderPaid;
+  const PaymentInfoCashHistoric({
+    super.key,
+    required this.modelOrderPaid,
+  });
+
+  @override
+  State<PaymentInfoCashHistoric> createState() =>
+      _PaymentInfoCashHistoricState();
+}
+
+class _PaymentInfoCashHistoricState extends State<PaymentInfoCashHistoric> {
+  @override
+  Widget build(BuildContext context) {
+    var txt = TextEditingController(
+        text: (widget.modelOrderPaid[0].value > 0)
+            ? floatToStrF(widget.modelOrderPaid[0].value)
+            : "");
+    return Row(
+      children: [
+        Expanded(
+          flex: 5,
+          child: headerfield('Dinheiro'),
+        ),
+        Expanded(
+          flex: 4,
+          child: Container(
+            height: 35,
+            alignment: Alignment.centerRight,
+            margin: const EdgeInsets.only(
+                left: 3.0, top: 1.0, right: 3.0, bottom: 1.0),
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.black),
+            ),
+            child: TextFormField(
+              controller: txt,
+              enabled: false,
+              keyboardType: TextInputType.number,
+              textAlign: TextAlign.right,
+              textAlignVertical: TextAlignVertical.center,
+              decoration: const InputDecoration(
+                border: InputBorder.none,
+                isDense: true,
+                contentPadding: EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
