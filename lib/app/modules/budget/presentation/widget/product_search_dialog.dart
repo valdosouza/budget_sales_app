@@ -64,10 +64,13 @@ class _ProductSearchDialogState extends State<ProductSearchDialog>
   }
 
   void _search() {
+    final code = _codeCtrl.text.trim();
     _bloc.add(ProductSearchLoad(
       description:
           _descCtrl.text.trim().isEmpty ? null : _descCtrl.text.trim(),
-      codeFactory: _codeCtrl.text.trim().isEmpty ? null : _codeCtrl.text.trim(),
+      codeFactory: code.isEmpty ? null : code,
+      codeBar: code.isEmpty ? null : code,
+      codeSupplier: code.isEmpty ? null : code,
       groupDescription:
           _groupCtrl.text.trim().isEmpty ? null : _groupCtrl.text.trim(),
       brandDescription:
