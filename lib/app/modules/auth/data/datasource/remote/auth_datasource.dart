@@ -35,7 +35,7 @@ class AuthDatasourceImpl extends AuthDatasource {
       method: HTTPMethod.post,
       data: jsonEncode(<String, String>{
         'login': username,
-        'password': passwordMd5,
+        'senha': passwordMd5,
       }),
       (payload) {
         final jsonMap = json.decode(payload) as Map<String, dynamic>;
