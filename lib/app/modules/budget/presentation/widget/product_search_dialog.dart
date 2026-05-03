@@ -65,12 +65,15 @@ class _ProductSearchDialogState extends State<ProductSearchDialog>
 
   void _search() {
     final code = _codeCtrl.text.trim();
+    final numericId = int.tryParse(code);
+
     _bloc.add(ProductSearchLoad(
+      // Código numérico → busca produto único por ID interno
+      id: numericId,
+      // Código não-numérico → passa como codeFactory para usar search da API
+      codeFactory: (numericId == null && code.isNotEmpty) ? code : null,
       description:
           _descCtrl.text.trim().isEmpty ? null : _descCtrl.text.trim(),
-      codeFactory: code.isEmpty ? null : code,
-      codeBar: code.isEmpty ? null : code,
-      codeSupplier: code.isEmpty ? null : code,
       groupDescription:
           _groupCtrl.text.trim().isEmpty ? null : _groupCtrl.text.trim(),
       brandDescription:

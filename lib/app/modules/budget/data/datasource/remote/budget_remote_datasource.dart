@@ -170,20 +170,25 @@ class BudgetRemoteDatasource extends Gateway {
     String? subgroupDescription,
     String? brandDescription,
   }) async {
+    // Código numérico → endpoint único GET /products/{id}
+    if (id != null && id > 0) {
+      try {
+        final product = await request(
+          'products/$id',
+          (body) => ProductModel.fromJson(jsonDecode(body) as Map<String, dynamic>),
+        );
+        return [product];
+      } catch (_) {
+        return [];
+      }
+    }
+
+    // A API suporta apenas o param 'search' (busca CONTAINING em
+    // descrição, codeFactory e codeBar). Usa o primeiro termo disponível.
+    final searchTerm = codeFactory ?? codeBar ?? codeSupplier ?? description;
     final params = <String, String>{};
-    if (id != null && id > 0) params['id'] = id.toString();
-    if (codeFactory != null && codeFactory.isNotEmpty) params['codeFactory'] = codeFactory;
-    if (codeBar != null && codeBar.isNotEmpty) params['codeBar'] = codeBar;
-    if (codeSupplier != null && codeSupplier.isNotEmpty) params['codeSupplier'] = codeSupplier;
-    if (description != null && description.isNotEmpty) params['description'] = description;
-    if (groupDescription != null && groupDescription.isNotEmpty) {
-      params['groupDescription'] = groupDescription;
-    }
-    if (subgroupDescription != null && subgroupDescription.isNotEmpty) {
-      params['subgroupDescription'] = subgroupDescription;
-    }
-    if (brandDescription != null && brandDescription.isNotEmpty) {
-      params['brandDescription'] = brandDescription;
+    if (searchTerm != null && searchTerm.isNotEmpty) {
+      params['search'] = searchTerm;
     }
 
     final query =
