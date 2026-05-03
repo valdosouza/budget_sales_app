@@ -20,12 +20,16 @@ class BudgetListLoading extends BudgetListState {
 }
 
 class BudgetListLoaded extends BudgetListState {
-  const BudgetListLoaded({required this.budgets});
+  const BudgetListLoaded({
+    required this.budgets,
+    this.pendingBudgets = const [],
+  });
 
   final List<BudgetEntity> budgets;
+  final List<BudgetEntity> pendingBudgets;
 
   @override
-  List<Object?> get props => [budgets];
+  List<Object?> get props => [budgets, pendingBudgets];
 }
 
 class BudgetListError extends BudgetListState {

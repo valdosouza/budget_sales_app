@@ -89,6 +89,14 @@ class _BudgetListPageState extends State<BudgetListPage> {
         .then((_) => _bloc.add(const BudgetListLoad()));
   }
 
+  void _openLocalDraft(int localId) {
+    Navigator.of(context)
+        .push(MaterialPageRoute(
+          builder: (_) => BudgetRegisterPage(localBudgetId: localId),
+        ))
+        .then((_) => _bloc.add(const BudgetListLoad()));
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocProvider.value(
@@ -228,27 +236,82 @@ class _BudgetListPageState extends State<BudgetListPage> {
           );
         }
         if (state is BudgetListLoaded) {
-          if (state.budgets.isEmpty) {
+          final pending = state.pendingBudgets;
+          final remote = state.budgets;
+
+          if (pending.isEmpty && remote.isEmpty) {
             return const Center(
               child: Text('Nenhum orçamento encontrado.'),
             );
           }
-          return ListView.separated(
+
+          return ListView(
             padding: const EdgeInsets.fromLTRB(8, 8, 8, 80),
-            itemCount: state.budgets.length,
-            separatorBuilder: (_, __) => const Divider(height: 1),
-            itemBuilder: (context, index) {
-              final budget = state.budgets[index];
-              return _BudgetTile(
-                budget: budget,
-                currencyFmt: _currencyFmt,
-                onTap: () => _openRegister(budget: budget),
-              );
-            },
+            children: [
+              if (pending.isNotEmpty) ...[
+                _SectionHeader(
+                  icon: Icons.cloud_upload_outlined,
+                  label: 'Rascunhos pendentes (${pending.length})',
+                  color: Colors.orange.shade700,
+                ),
+                ...pending.map((b) => _BudgetTile(
+                      budget: b,
+                      currencyFmt: _currencyFmt,
+                      isPending: true,
+                      onTap: () => _openLocalDraft(b.id),
+                    )),
+                const Divider(height: 16, thickness: 1),
+              ],
+              if (remote.isNotEmpty) ...[
+                if (pending.isNotEmpty)
+                  _SectionHeader(
+                    icon: Icons.cloud_done_outlined,
+                    label: 'Orçamentos',
+                    color: Colors.grey.shade600,
+                  ),
+                ...remote.map((b) => _BudgetTile(
+                      budget: b,
+                      currencyFmt: _currencyFmt,
+                      onTap: () => _openRegister(budget: b),
+                    )),
+              ],
+            ],
           );
         }
         return const SizedBox.shrink();
       },
+    );
+  }
+}
+
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader({
+    required this.icon,
+    required this.label,
+    required this.color,
+  });
+
+  final IconData icon;
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(4, 8, 4, 4),
+      child: Row(
+        children: [
+          Icon(icon, size: 16, color: color),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: Theme.of(context)
+                .textTheme
+                .labelMedium
+                ?.copyWith(color: color, fontWeight: FontWeight.w600),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -258,21 +321,52 @@ class _BudgetTile extends StatelessWidget {
     required this.budget,
     required this.currencyFmt,
     required this.onTap,
+    this.isPending = false,
   });
 
   final BudgetEntity budget;
   final NumberFormat currencyFmt;
   final VoidCallback onTap;
+  final bool isPending;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final pendingColor = Colors.orange.shade700;
     return ListTile(
       onTap: onTap,
+      tileColor: isPending ? Colors.orange.shade50 : null,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      title: Text(
-        budget.number.isNotEmpty ? budget.number : 'Orçamento #${budget.id}',
-        style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+      title: Row(
+        children: [
+          Expanded(
+            child: Text(
+              budget.number.isNotEmpty
+                  ? budget.number
+                  : 'Rascunho #${budget.id}',
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: isPending ? pendingColor : null,
+              ),
+            ),
+          ),
+          if (isPending)
+            Container(
+              margin: const EdgeInsets.only(left: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: pendingColor,
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: const Text(
+                'PENDENTE',
+                style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold),
+              ),
+            ),
+        ],
       ),
       subtitle: Text(
         budget.customerName,

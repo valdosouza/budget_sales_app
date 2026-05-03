@@ -90,10 +90,12 @@ class ProductSearchBloc extends Bloc<ProductSearchEvent, ProductSearchState> {
     emit(current.copyWith(isLoadingDetail: true));
 
     final result = await getPrices(event.productId);
+    final latest = state;
+    if (latest is! ProductSearchDetailLoaded) return;
     result.fold(
-      (f) => emit(current.copyWith(isLoadingDetail: false)),
+      (f) => emit(latest.copyWith(isLoadingDetail: false)),
       (prices) =>
-          emit(current.copyWith(priceList: prices, isLoadingDetail: false)),
+          emit(latest.copyWith(priceList: prices, isLoadingDetail: false)),
     );
   }
 
@@ -104,10 +106,12 @@ class ProductSearchBloc extends Bloc<ProductSearchEvent, ProductSearchState> {
     emit(current.copyWith(isLoadingDetail: true));
 
     final result = await getProductImages(event.productId);
+    final latest = state;
+    if (latest is! ProductSearchDetailLoaded) return;
     result.fold(
-      (f) => emit(current.copyWith(isLoadingDetail: false)),
+      (f) => emit(latest.copyWith(isLoadingDetail: false)),
       (images) =>
-          emit(current.copyWith(images: images, isLoadingDetail: false)),
+          emit(latest.copyWith(images: images, isLoadingDetail: false)),
     );
   }
 

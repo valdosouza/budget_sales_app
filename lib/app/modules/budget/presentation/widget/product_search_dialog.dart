@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:budget_sales/app/modules/budget/domain/entity/product_entity.dart';
 import 'package:budget_sales/app/modules/budget/presentation/bloc/product_search_bloc.dart';
 import 'package:budget_sales/app/modules/budget/presentation/bloc/product_search_event.dart';
@@ -44,6 +46,8 @@ class _ProductSearchDialogState extends State<ProductSearchDialog>
   final _groupCtrl = TextEditingController();
 
   bool _showFilters = false;
+  StockBalanceEntity? _selectedStock;
+  PriceListEntity? _selectedPrice;
   final _currencyFmt = NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
 
   @override
@@ -74,11 +78,16 @@ class _ProductSearchDialogState extends State<ProductSearchDialog>
       id: (bar.isEmpty && isProductId) ? parsed : null,
       codeFactory: (bar.isEmpty && !isProductId && code.isNotEmpty) ? code : null,
       description: _descCtrl.text.trim().isEmpty ? null : _descCtrl.text.trim(),
-      groupDescription: _groupCtrl.text.trim().isEmpty ? null : _groupCtrl.text.trim(),
+      groupDescription:
+          _groupCtrl.text.trim().isEmpty ? null : _groupCtrl.text.trim(),
     ));
   }
 
   void _selectProduct(ProductEntity product) {
+    setState(() {
+      _selectedStock = null;
+      _selectedPrice = null;
+    });
     _bloc.add(ProductSearchLoadStock(productId: product.id));
     _bloc.add(ProductSearchLoadPrices(productId: product.id));
     _tabController.animateTo(1);
@@ -138,6 +147,32 @@ class _ProductSearchDialogState extends State<ProductSearchDialog>
                 ],
               ),
             ),
+            BlocBuilder<ProductSearchBloc, ProductSearchState>(
+              builder: (ctx, state) {
+                final detail =
+                    state is ProductSearchDetailLoaded ? state : null;
+                final canSelect = detail != null &&
+                    _selectedStock != null &&
+                    _selectedPrice != null;
+                return Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+                  child: ElevatedButton.icon(
+                    onPressed: canSelect
+                        ? () => Navigator.of(ctx).pop(ProductSelection(
+                              product: detail.selectedProduct,
+                              stockBalance: _selectedStock!,
+                              priceList: _selectedPrice!,
+                            ))
+                        : null,
+                    icon: const Icon(Icons.add_shopping_cart),
+                    label: const Text('Selecionar Item'),
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: const Size(double.infinity, 48),
+                    ),
+                  ),
+                );
+              },
+            ),
           ],
         ),
       ),
@@ -166,7 +201,7 @@ class _ProductSearchDialogState extends State<ProductSearchDialog>
                 child: TextField(
                   controller: _codeCtrl,
                   decoration: const InputDecoration(
-                    labelText: 'Código / Fábrica / Barras',
+                    labelText: 'Código / Fábrica',
                     isDense: true,
                     border: OutlineInputBorder(),
                   ),
@@ -245,7 +280,8 @@ class _ProductSearchDialogState extends State<ProductSearchDialog>
               selectedTileColor:
                   Theme.of(context).colorScheme.primaryContainer.withAlpha(80),
               title: Text(p.description,
-                  maxLines: 2, overflow: TextOverflow.ellipsis,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                   style: const TextStyle(fontSize: 13)),
               subtitle: Text('${p.codeFactory}  |  ${p.groupDescription}',
                   style: const TextStyle(fontSize: 11)),
@@ -283,9 +319,25 @@ class _ProductSearchDialogState extends State<ProductSearchDialog>
               _DetailRow('Subgrupo', p.subgroupDescription),
               _DetailRow('Marca', p.brandDescription),
               _DetailRow('Localização', p.location),
-              _DetailRow('Unidade', '${p.measureDescription} (${p.measureAbbreviation})'),
+              _DetailRow('Unidade',
+                  '${p.measureDescription} (${p.measureAbbreviation})'),
               _DetailRow('Peso', '${p.weight} kg'),
-              _DetailRow('Subst. tributária', p.taxSubstitution == 'S' ? 'Sim' : 'Não'),
+              _DetailRow('Subst. tributária',
+                  p.taxSubstitution == 'S' ? 'Sim' : 'Não'),
+              const SizedBox(height: 16),
+              OutlinedButton.icon(
+                onPressed: () {
+                  _bloc.add(ProductSearchLoadImages(productId: p.id));
+                  Navigator.of(context).push(MaterialPageRoute(
+                    builder: (_) => BlocProvider.value(
+                      value: _bloc,
+                      child: const _ProductImagesPage(),
+                    ),
+                  ));
+                },
+                icon: const Icon(Icons.image_outlined),
+                label: const Text('Ver Imagem'),
+              ),
             ],
           ),
         );
@@ -306,31 +358,29 @@ class _ProductSearchDialogState extends State<ProductSearchDialog>
         if (state.stockList.isEmpty) {
           return const Center(child: Text('Sem estoque disponível.'));
         }
-        return Column(
-          children: [
-            Expanded(
-              child: ListView.separated(
-                padding: const EdgeInsets.all(8),
-                itemCount: state.stockList.length,
-                separatorBuilder: (_, __) => const Divider(height: 1),
-                itemBuilder: (ctx, i) {
-                  final s = state.stockList[i];
-                  return ListTile(
-                    title: Text(s.stockListDesc),
-                    trailing: Text(
-                      s.quantity.toStringAsFixed(2),
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: s.quantity > 0
-                            ? Colors.green[700]
-                            : Colors.red[700],
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ],
+        return RadioGroup<StockBalanceEntity>(
+          groupValue: _selectedStock,
+          onChanged: (v) => setState(() => _selectedStock = v),
+          child: ListView.separated(
+            padding: const EdgeInsets.all(8),
+            itemCount: state.stockList.length,
+            separatorBuilder: (_, __) => const Divider(height: 1),
+            itemBuilder: (ctx, i) {
+              final s = state.stockList[i];
+              final positive = s.quantity > 0;
+              return RadioListTile<StockBalanceEntity>(
+                value: s,
+                title: Text(s.stockListDesc),
+                secondary: Text(
+                  s.quantity.toStringAsFixed(2),
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: positive ? Colors.green[700] : Colors.red[700],
+                  ),
+                ),
+              );
+            },
+          ),
         );
       },
     );
@@ -349,40 +399,32 @@ class _ProductSearchDialogState extends State<ProductSearchDialog>
         if (state.priceList.isEmpty) {
           return const Center(child: Text('Sem tabela de preço disponível.'));
         }
-        return ListView.separated(
-          padding: const EdgeInsets.all(8),
-          itemCount: state.priceList.length,
-          separatorBuilder: (_, __) => const Divider(height: 1),
-          itemBuilder: (ctx, i) {
-            final price = state.priceList[i];
-            final enabled = price.salePrice > 0;
-            return ListTile(
-              enabled: enabled,
-              title: Text(price.priceListName),
-              trailing: Text(
-                _currencyFmt.format(price.salePrice),
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: enabled
-                      ? Theme.of(context).colorScheme.primary
-                      : Colors.grey,
+        return RadioGroup<PriceListEntity>(
+          groupValue: _selectedPrice,
+          onChanged: (v) => setState(() => _selectedPrice = v),
+          child: ListView.separated(
+            padding: const EdgeInsets.all(8),
+            itemCount: state.priceList.length,
+            separatorBuilder: (_, __) => const Divider(height: 1),
+            itemBuilder: (ctx, i) {
+              final price = state.priceList[i];
+              final enabled = price.salePrice > 0;
+              return RadioListTile<PriceListEntity>(
+                value: price,
+                enabled: enabled,
+                title: Text(price.priceListName),
+                secondary: Text(
+                  _currencyFmt.format(price.salePrice),
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: enabled
+                        ? Theme.of(context).colorScheme.primary
+                        : Colors.grey,
+                  ),
                 ),
-              ),
-              onTap: enabled
-                  ? () {
-                      // Find a stock to use (first available, or empty)
-                      final stock = state.stockList.isNotEmpty
-                          ? state.stockList.first
-                          : StockBalanceEntity.empty();
-                      Navigator.of(context).pop(ProductSelection(
-                        product: state.selectedProduct,
-                        stockBalance: stock,
-                        priceList: price,
-                      ));
-                    }
-                  : null,
-            );
-          },
+              );
+            },
+          ),
         );
       },
     );
@@ -421,6 +463,107 @@ class _DetailRow extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+// ── Product Images Page ───────────────────────────────────────────────────────
+
+class _ProductImagesPage extends StatefulWidget {
+  const _ProductImagesPage();
+
+  @override
+  State<_ProductImagesPage> createState() => _ProductImagesPageState();
+}
+
+class _ProductImagesPageState extends State<_ProductImagesPage> {
+  final _pageController = PageController();
+  int _currentPage = 0;
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Imagens do Produto')),
+      body: BlocBuilder<ProductSearchBloc, ProductSearchState>(
+        builder: (context, state) {
+          if (state is! ProductSearchDetailLoaded) {
+            return const Center(child: Text('Nenhum produto selecionado.'));
+          }
+          if (state.isLoadingDetail && state.images.isEmpty) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (state.images.isEmpty) {
+            return const Center(child: Text('Sem imagens disponíveis.'));
+          }
+          final images = state.images;
+          return Column(
+            children: [
+              Expanded(
+                child: PageView.builder(
+                  controller: _pageController,
+                  itemCount: images.length,
+                  onPageChanged: (p) => setState(() => _currentPage = p),
+                  itemBuilder: (_, index) =>
+                      _buildImage(images[index].imageUrl),
+                ),
+              ),
+              if (images.length > 1)
+                Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      IconButton.outlined(
+                        icon: const Icon(Icons.arrow_back),
+                        onPressed: _currentPage > 0
+                            ? () => _pageController.previousPage(
+                                duration: const Duration(milliseconds: 300),
+                                curve: Curves.easeInOut)
+                            : null,
+                      ),
+                      Text('${_currentPage + 1} / ${images.length}'),
+                      IconButton.outlined(
+                        icon: const Icon(Icons.arrow_forward),
+                        onPressed: _currentPage < images.length - 1
+                            ? () => _pageController.nextPage(
+                                duration: const Duration(milliseconds: 300),
+                                curve: Curves.easeInOut)
+                            : null,
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildImage(String imageUrl) {
+    if (imageUrl.startsWith('data:')) {
+      final comma = imageUrl.indexOf(',');
+      if (comma >= 0) {
+        try {
+          final bytes = base64Decode(imageUrl.substring(comma + 1));
+          return InteractiveViewer(
+            child: Center(child: Image.memory(bytes, fit: BoxFit.contain)),
+          );
+        } catch (_) {}
+      }
+    }
+    if (imageUrl.startsWith('http')) {
+      return InteractiveViewer(
+        child: Center(child: Image.network(imageUrl, fit: BoxFit.contain)),
+      );
+    }
+    return const Center(child: Text('Imagem não disponível.'));
   }
 }
 

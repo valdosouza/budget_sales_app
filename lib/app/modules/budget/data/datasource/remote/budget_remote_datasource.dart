@@ -218,7 +218,7 @@ class BudgetRemoteDatasource extends Gateway {
   // ── Stock Balance ─────────────────────────────────────────────────────────
 
   Future<List<StockBalanceModel>> getStockBalance(int productId) => request(
-        'stock-balance?productId=$productId',
+        'stock-balance/product/$productId',
         (body) {
           final list = _decodeList(body);
           return list
@@ -242,7 +242,7 @@ class BudgetRemoteDatasource extends Gateway {
   // ── Product Images ────────────────────────────────────────────────────────
 
   Future<List<ProductImageModel>> getProductImages(int productId) => request(
-        'product-images?productId=$productId',
+        'product-images/product/$productId',
         (body) {
           final list = _decodeList(body);
           return list

@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(flutter devices *)",
+      "Bash(flutter attach *)",
+      "Bash(flutter run *)",
+      "Bash(Get-ChildItem -Path \"D:\\\\GestaoApps\\\\BudgetSales\\\\budget_sales_api\\\\src\\\\product\" -Recurse -File)",
+      "Bash(Select-Object FullName)",
+      "Bash(git push *)",
+      "Bash(flutter analyze *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Read(//d/GestaoApps/BudgetSales/budget_sales_api/src/budget/**)",
+      "Read(//d/GestaoApps/BudgetSales/budget_sales_api/src/**)",
+      "Read(//d/GestaoApps/BudgetSales/budget_sales_api/**)",
+      "Bash(echo \"r\")",
+      "Bash(Write-Host \"hot reload signal sent\")",
+      "Bash(ipconfig)",
+      "Bash(findstr \"IPv4\")",
+      "Bash(Get-ChildItem -Path \"D:\\\\GestaoApps\\\\BudgetSales\\\\budget_sales_app\\\\lib\\\\app\\\\modules\\\\budget\" -Recurse -Filter \"*.dart\")"
+    ],
+    "additionalDirectories": [
+      "d:\\GestaoApps\\BudgetSales\\budget_sales_api\\src\\budget\\infrastructure"
+    ]
+  }
+}

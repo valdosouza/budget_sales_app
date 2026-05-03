@@ -66,7 +66,10 @@ class BudgetModule extends Module {
 
         // ── BLoCs ────────────────────────────────────────────────────────
         BlocBind.singleton<BudgetListBloc>(
-          (i) => BudgetListBloc(getBudgets: i<GetBudgets>()),
+          (i) => BudgetListBloc(
+            getBudgets: i<GetBudgets>(),
+            getLocalBudgets: i<GetLocalBudgets>(),
+          ),
         ),
         BlocBind.factory<BudgetRegisterBloc>(
           (i) => BudgetRegisterBloc(

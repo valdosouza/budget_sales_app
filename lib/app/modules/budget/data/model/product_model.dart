@@ -128,6 +128,6 @@ class ProductImageModel extends ProductImageEntity {
         productId: json['productId'] is int
             ? json['productId']
             : int.tryParse(json['productId'].toString()) ?? 0,
-        imageUrl: json['imageUrl']?.toString() ?? json['url']?.toString() ?? '',
+        imageUrl: json['dataUri']?.toString() ?? json['link']?.toString() ?? json['imageUrl']?.toString() ?? '',
       );
 }
