@@ -50,10 +50,8 @@ class ProductSearchBloc extends Bloc<ProductSearchEvent, ProductSearchState> {
 
     if (current is ProductSearchLoaded) {
       products = current.products;
-      selected = products.firstWhere(
-        (p) => p.id == event.productId,
-        orElse: () => ProductEntity.empty(),
-      );
+      final idx = products.indexWhere((p) => p.id == event.productId);
+      selected = idx >= 0 ? products[idx] : null;
     } else if (current is ProductSearchDetailLoaded) {
       products = current.products;
       selected = current.selectedProduct;

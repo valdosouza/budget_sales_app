@@ -12,6 +12,19 @@ import 'package:budget_sales/app/modules/budget/domain/entity/budget_item_entity
 class BudgetRemoteDatasource extends Gateway {
   BudgetRemoteDatasource({required super.httpClient});
 
+  /// Extrai uma List do body, suportando resposta direta `[...]`
+  /// ou envelope `{"rows":[...],"data":[...],"items":[...]}`.
+  static List<dynamic> _decodeList(String body) {
+    final decoded = jsonDecode(body);
+    if (decoded is List) return decoded;
+    if (decoded is Map<String, dynamic>) {
+      for (final key in ['rows', 'data', 'items', 'records', 'result']) {
+        if (decoded[key] is List) return decoded[key] as List<dynamic>;
+      }
+    }
+    return [];
+  }
+
   // ── Budgets ──────────────────────────────────────────────────────────────
 
   Future<List<BudgetModel>> getBudgets({
@@ -34,7 +47,7 @@ class BudgetRemoteDatasource extends Gateway {
     return request(
       'budgets$query',
       (body) {
-        final list = jsonDecode(body) as List<dynamic>;
+        final list = _decodeList(body);
         return list
             .map((e) => BudgetModel.fromJson(e as Map<String, dynamic>))
             .toList();
@@ -66,7 +79,7 @@ class BudgetRemoteDatasource extends Gateway {
   Future<List<BudgetItemModel>> getBudgetItems(int budgetId) => request(
         'budgets/$budgetId/items',
         (body) {
-          final list = jsonDecode(body) as List<dynamic>;
+          final list = _decodeList(body);
           return list
               .map((e) => BudgetItemModel.fromJson(e as Map<String, dynamic>))
               .toList();
@@ -119,7 +132,7 @@ class BudgetRemoteDatasource extends Gateway {
     return request(
       'customers$query',
       (body) {
-        final list = jsonDecode(body) as List<dynamic>;
+        final list = _decodeList(body);
         return list
             .map((e) => CustomerModel.fromJson(e as Map<String, dynamic>))
             .toList();
@@ -137,7 +150,7 @@ class BudgetRemoteDatasource extends Gateway {
     return request(
       'payment-types$query',
       (body) {
-        final list = jsonDecode(body) as List<dynamic>;
+        final list = _decodeList(body);
         return list
             .map((e) => PaymentTypeModel.fromJson(e as Map<String, dynamic>))
             .toList();
@@ -179,7 +192,7 @@ class BudgetRemoteDatasource extends Gateway {
     return request(
       'products$query',
       (body) {
-        final list = jsonDecode(body) as List<dynamic>;
+        final list = _decodeList(body);
         return list
             .map((e) => ProductModel.fromJson(e as Map<String, dynamic>))
             .toList();
@@ -192,7 +205,7 @@ class BudgetRemoteDatasource extends Gateway {
   Future<List<StockBalanceModel>> getStockBalance(int productId) => request(
         'stock-balance?productId=$productId',
         (body) {
-          final list = jsonDecode(body) as List<dynamic>;
+          final list = _decodeList(body);
           return list
               .map((e) => StockBalanceModel.fromJson(e as Map<String, dynamic>))
               .toList();
@@ -204,7 +217,7 @@ class BudgetRemoteDatasource extends Gateway {
   Future<List<PriceListModel>> getPrices(int productId) => request(
         'prices/product/$productId',
         (body) {
-          final list = jsonDecode(body) as List<dynamic>;
+          final list = _decodeList(body);
           return list
               .map((e) => PriceListModel.fromJson(e as Map<String, dynamic>))
               .toList();
@@ -216,7 +229,7 @@ class BudgetRemoteDatasource extends Gateway {
   Future<List<ProductImageModel>> getProductImages(int productId) => request(
         'product-images?productId=$productId',
         (body) {
-          final list = jsonDecode(body) as List<dynamic>;
+          final list = _decodeList(body);
           return list
               .map(
                   (e) => ProductImageModel.fromJson(e as Map<String, dynamic>))
