@@ -32,6 +32,7 @@ class BudgetRemoteDatasource extends Gateway {
     String? dateStart,
     String? dateEnd,
     String? customerName,
+    int? institutionId,
   }) async {
     final params = <String, String>{};
     if (number != null && number.isNotEmpty) params['number'] = number;
@@ -39,6 +40,9 @@ class BudgetRemoteDatasource extends Gateway {
     if (dateEnd != null && dateEnd.isNotEmpty) params['dateEnd'] = dateEnd;
     if (customerName != null && customerName.isNotEmpty) {
       params['customerName'] = customerName;
+    }
+    if (institutionId != null && institutionId > 0) {
+      params['institutionId'] = institutionId.toString();
     }
 
     final query =

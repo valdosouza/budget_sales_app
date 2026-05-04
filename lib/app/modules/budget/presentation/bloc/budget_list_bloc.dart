@@ -1,3 +1,4 @@
+import 'package:budget_sales/app/core/shared/helpers/local_storage.dart';
 import 'package:budget_sales/app/modules/budget/domain/entity/budget_entity.dart';
 import 'package:budget_sales/app/modules/budget/domain/usecase/budget_usecases.dart';
 import 'package:budget_sales/app/modules/budget/presentation/bloc/budget_list_event.dart';
@@ -27,12 +28,19 @@ class BudgetListBloc extends Bloc<BudgetListEvent, BudgetListState> {
       (list) => list,
     );
 
+    // Load institutionId from local storage
+    final institutionValue = await LocalStorageService.instance
+        .get(key: 'institution', defaultValue: '');
+    final institutionId =
+        int.tryParse(institutionValue?.toString() ?? '') ?? 0;
+
     // Then try remote
     final result = await getBudgets(
       number: event.number,
       dateStart: event.dateStart,
       dateEnd: event.dateEnd,
       customerName: event.customerName,
+      institutionId: institutionId > 0 ? institutionId : null,
     );
     result.fold(
       (failure) => emit(BudgetListLoaded(

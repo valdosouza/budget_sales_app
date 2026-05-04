@@ -27,7 +27,7 @@ class BudgetLocalDatasource {
     return db.insertBudget(TbBudgetCompanion.insert(
       orderId: const Value(0),
       userId: Value(budget.userId),
-      date: Value(_parseDate(budget.date)),
+      date: _parseDate(budget.date),
       customerId: Value(budget.customerId),
       customerName: Value(budget.customerName.isEmpty ? null : budget.customerName),
       paymentTypeId: Value(budget.paymentTypeId > 0 ? budget.paymentTypeId : null),
@@ -42,7 +42,7 @@ class BudgetLocalDatasource {
       deliveryTime:
           Value(budget.deliveryTime.isEmpty ? null : budget.deliveryTime),
       salesmanId: Value(budget.salesmanId > 0 ? budget.salesmanId : null),
-      warehouseId: Value(budget.warehouseId > 0 ? budget.warehouseId : null),
+      warehouseId: Value(budget.institutionId > 0 ? budget.institutionId : null),
       status: Value(budget.status.isEmpty ? null : budget.status),
     ));
   }
@@ -69,7 +69,7 @@ class BudgetLocalDatasource {
       deliveryTime:
           Value(budget.deliveryTime.isEmpty ? null : budget.deliveryTime),
       salesmanId: Value(budget.salesmanId > 0 ? budget.salesmanId : null),
-      warehouseId: Value(budget.warehouseId > 0 ? budget.warehouseId : null),
+      warehouseId: Value(budget.institutionId > 0 ? budget.institutionId : null),
       status: Value(budget.status.isEmpty ? null : budget.status),
     ));
   }
@@ -168,7 +168,7 @@ class BudgetLocalDatasource {
         validity: row.validity ?? '',
         deliveryTime: row.deliveryTime ?? '',
         salesmanId: row.salesmanId ?? 0,
-        warehouseId: row.warehouseId ?? 0,
+        institutionId: row.warehouseId ?? 0,
         status: row.status ?? 'N',
       );
 

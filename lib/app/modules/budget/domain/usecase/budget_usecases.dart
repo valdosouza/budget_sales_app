@@ -18,12 +18,14 @@ class GetBudgets {
     String? dateStart,
     String? dateEnd,
     String? customerName,
+    int? institutionId,
   }) =>
       repository.getBudgets(
         number: number,
         dateStart: dateStart,
         dateEnd: dateEnd,
         customerName: customerName,
+        institutionId: institutionId,
       );
 }
 

@@ -1,3 +1,4 @@
+import 'package:budget_sales/app/core/shared/helpers/local_storage.dart';
 import 'package:budget_sales/app/core/shared/theme.dart';
 import 'package:budget_sales/app/core/shared/validators/form_validators.dart';
 import 'package:budget_sales/app/core/shared/widgets/degrade_area.dart';
@@ -5,6 +6,7 @@ import 'package:budget_sales/app/core/shared/widgets/logo_area.dart';
 import 'package:budget_sales/app/modules/auth/presentation/bloc/auth_bloc.dart';
 import 'package:budget_sales/app/modules/auth/presentation/bloc/auth_event.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show TextInputFormatter;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_modular/flutter_modular.dart';
 
@@ -26,11 +28,38 @@ class _AuthPageState extends State<AuthPage> {
   final _loginController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _passwordVisible = false;
+  bool _rememberCredentials = false;
 
   @override
   void initState() {
     super.initState();
     _bloc = widget.bloc ?? Modular.get<AuthBloc>();
+    _loadSavedCredentials();
+  }
+
+  Future<void> _loadSavedCredentials() async {
+    final savedLogin = await LocalStorageService.instance
+        .get(key: 'saved_login', defaultValue: '');
+    final savedPassword = await LocalStorageService.instance
+        .get(key: 'saved_password', defaultValue: '');
+    final hasSaved = savedLogin != null && savedLogin.toString().isNotEmpty;
+
+    if (hasSaved) {
+      setState(() {
+        _loginController.text = savedLogin.toString();
+        _passwordController.text = savedPassword?.toString() ?? '';
+        _rememberCredentials = true;
+      });
+    }
+  }
+
+  Future<void> _saveCredentials(String login, String password) async {
+    if (_rememberCredentials) {
+      await LocalStorageService.instance
+          .saveItem(key: 'saved_login', value: login);
+      await LocalStorageService.instance
+          .saveItem(key: 'saved_password', value: password);
+    }
   }
 
   @override
@@ -63,7 +92,7 @@ class _AuthPageState extends State<AuthPage> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(state.error),
-              backgroundColor: Colors.red.shade700,
+              backgroundColor: Colors.blue.shade700,
             ),
           );
         }
@@ -100,7 +129,8 @@ class _AuthPageState extends State<AuthPage> {
                   _buildUserField(),
                   const SizedBox(height: 10),
                   _buildPasswordField(),
-                  const SizedBox(height: 20),
+                  _buildRememberCheckbox(),
+                  const SizedBox(height: 10),
                   _buildLoginButton(context),
                   const SizedBox(height: 16),
                   _buildServerConfigLink(),
@@ -127,10 +157,10 @@ class _AuthPageState extends State<AuthPage> {
             keyboardType: TextInputType.text,
             autofocus: false,
             textInputAction: TextInputAction.next,
+            inputFormatters: [UpperCaseTextInputFormatter()],
             validator: (v) =>
                 (v == null || v.trim().isEmpty) ? 'Informe o usuário' : null,
-            style:
-                const TextStyle(color: Colors.white, fontFamily: 'OpenSans'),
+            style: const TextStyle(color: Colors.white, fontFamily: 'OpenSans'),
             decoration: const InputDecoration(
               border: InputBorder.none,
               contentPadding: EdgeInsets.only(top: 14),
@@ -158,8 +188,7 @@ class _AuthPageState extends State<AuthPage> {
             keyboardType: TextInputType.visiblePassword,
             textInputAction: TextInputAction.done,
             validator: (v) => validatePassword(v, minLength: 1),
-            style:
-                const TextStyle(color: Colors.white, fontFamily: 'OpenSans'),
+            style: const TextStyle(color: Colors.white, fontFamily: 'OpenSans'),
             decoration: InputDecoration(
               border: InputBorder.none,
               contentPadding: const EdgeInsets.only(top: 14),
@@ -170,14 +199,33 @@ class _AuthPageState extends State<AuthPage> {
                 onPressed: () =>
                     setState(() => _passwordVisible = !_passwordVisible),
                 icon: Icon(
-                  _passwordVisible
-                      ? Icons.visibility
-                      : Icons.visibility_off,
+                  _passwordVisible ? Icons.visibility : Icons.visibility_off,
                   color: Colors.white,
                 ),
               ),
             ),
           ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRememberCheckbox() {
+    return Row(
+      children: [
+        Checkbox(
+          value: _rememberCredentials,
+          checkColor: Colors.blue,
+          activeColor: Colors.white,
+          onChanged: (value) {
+            setState(() {
+              _rememberCredentials = value ?? false;
+            });
+          },
+        ),
+        const Text(
+          'Lembrar credenciais',
+          style: TextStyle(color: Colors.white, fontFamily: 'OpenSans'),
         ),
       ],
     );
@@ -189,16 +237,19 @@ class _AuthPageState extends State<AuthPage> {
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
           minimumSize: const Size(100, 60),
-          backgroundColor: Colors.black,
+          backgroundColor: const Color.fromARGB(255, 129, 199, 132),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(18),
           ),
         ),
         onPressed: () {
           if (_form.currentState?.validate() ?? false) {
+            final login = _loginController.text.trim();
+            final password = _passwordController.text;
+            _saveCredentials(login, password);
             _bloc.add(AuthLoginEvent(
-              login: _loginController.text.trim(),
-              password: _passwordController.text,
+              login: login,
+              password: password,
             ));
           }
         },
@@ -219,12 +270,25 @@ class _AuthPageState extends State<AuthPage> {
   Widget _buildServerConfigLink() {
     return TextButton.icon(
       onPressed: () => Modular.to.pushNamed('/server-config/'),
-      icon: const Icon(Icons.settings_ethernet,
-          color: Colors.white70, size: 18),
+      icon:
+          const Icon(Icons.settings_ethernet, color: Colors.white70, size: 18),
       label: const Text(
         'Configurar servidor',
         style: TextStyle(color: Colors.white70, fontFamily: 'OpenSans'),
       ),
+    );
+  }
+}
+
+class UpperCaseTextInputFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    return newValue.copyWith(
+      text: newValue.text.toUpperCase(),
+      selection: newValue.selection,
     );
   }
 }

@@ -21,7 +21,7 @@ class BudgetModel extends BudgetEntity {
     required super.validity,
     required super.deliveryTime,
     required super.salesmanId,
-    required super.warehouseId,
+    required super.institutionId,
     required super.status,
   });
 
@@ -58,7 +58,7 @@ class BudgetModel extends BudgetEntity {
         validity: json['validity']?.toString() ?? '',
         deliveryTime: json['deliveryTime']?.toString() ?? '',
         salesmanId: _toInt(json['salesmanId']),
-        warehouseId: _toInt(json['warehouseId']),
+        institutionId: _toInt(json['institutionId']),
         status: json['status']?.toString() ?? 'N',
       );
 
@@ -82,7 +82,7 @@ class BudgetModel extends BudgetEntity {
         'validity': validity.isEmpty ? null : validity,
         'deliveryTime': deliveryTime.isEmpty ? null : deliveryTime,
         'salesmanId': salesmanId,
-        'warehouseId': warehouseId,
+        'institutionId': institutionId,
         'status': status,
       };
 
@@ -96,7 +96,7 @@ class BudgetModel extends BudgetEntity {
       freight: e.freight, discountPercent: e.discountPercent,
       discountValue: e.discountValue, total: e.total, contact: e.contact,
       validity: e.validity, deliveryTime: e.deliveryTime,
-      salesmanId: e.salesmanId, warehouseId: e.warehouseId, status: e.status,
+      salesmanId: e.salesmanId, institutionId: e.institutionId, status: e.status,
     );
   }
 
@@ -108,6 +108,6 @@ class BudgetModel extends BudgetEntity {
         freight: e.freight, discountPercent: e.discountPercent,
         discountValue: e.discountValue, total: e.total, contact: e.contact,
         validity: e.validity, deliveryTime: e.deliveryTime,
-        salesmanId: e.salesmanId, warehouseId: e.warehouseId, status: e.status,
+        salesmanId: e.salesmanId, institutionId: e.institutionId, status: e.status,
       );
 }

@@ -23,6 +23,7 @@ class ServerIpPage extends StatefulWidget {
 class _ServerIpPageState extends State<ServerIpPage> {
   final _form = GlobalKey<FormState>();
   final _ipController = TextEditingController();
+  final _institutionController = TextEditingController();
   bool _testing = false;
   String? _testResult;
   bool _testSuccess = false;
@@ -39,16 +40,23 @@ class _ServerIpPageState extends State<ServerIpPage> {
   }
 
   Future<void> _loadSavedIp() async {
-    final saved = await LocalStorageService.instance
+    final savedIp = await LocalStorageService.instance
         .get(key: LocalStorageKey.serverIp, defaultValue: '');
-    if (saved != null && saved.toString().isNotEmpty) {
-      _ipController.text = saved.toString();
+    if (savedIp != null && savedIp.toString().isNotEmpty) {
+      _ipController.text = savedIp.toString();
+    }
+
+    final savedInstitution = await LocalStorageService.instance
+        .get(key: 'institution', defaultValue: '');
+    if (savedInstitution != null && savedInstitution.toString().isNotEmpty) {
+      _institutionController.text = savedInstitution.toString();
     }
   }
 
   @override
   void dispose() {
     _ipController.dispose();
+    _institutionController.dispose();
     super.dispose();
   }
 
@@ -58,6 +66,13 @@ class _ServerIpPageState extends State<ServerIpPage> {
     }
     if (!_ipRegex.hasMatch(value.trim())) {
       return 'IP inválido. Ex: 192.168.0.10';
+    }
+    return null;
+  }
+
+  String? _validateInstitution(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Informe o estabelecimento';
     }
     return null;
   }
@@ -100,13 +115,16 @@ class _ServerIpPageState extends State<ServerIpPage> {
     if (!(_form.currentState?.validate() ?? false)) return;
 
     final ip = _ipController.text.trim();
+    final institution = _institutionController.text.trim();
     await LocalStorageService.instance
         .saveItem(key: LocalStorageKey.serverIp, value: ip);
+    await LocalStorageService.instance
+        .saveItem(key: 'institution', value: institution);
 
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('Servidor configurado com sucesso!'),
+        content: Text('Servidor e estabelecimento configurados com sucesso!'),
         backgroundColor: Colors.green,
       ),
     );
@@ -149,6 +167,8 @@ class _ServerIpPageState extends State<ServerIpPage> {
                       ),
                       const SizedBox(height: 24),
                       _buildIpField(),
+                      const SizedBox(height: 16),
+                      _buildInstitutionField(),
                       const SizedBox(height: 12),
                       _buildTestButton(),
                       if (_testResult != null) ...[
@@ -188,17 +208,14 @@ class _ServerIpPageState extends State<ServerIpPage> {
           decoration: kBoxDecorationStyle,
           child: TextFormField(
             controller: _ipController,
-            keyboardType:
-                const TextInputType.numberWithOptions(decimal: true),
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
             textInputAction: TextInputAction.done,
             validator: _validateIp,
-            style:
-                const TextStyle(color: Colors.white, fontFamily: 'OpenSans'),
+            style: const TextStyle(color: Colors.white, fontFamily: 'OpenSans'),
             decoration: const InputDecoration(
               border: InputBorder.none,
               contentPadding: EdgeInsets.only(top: 14),
-              prefixIcon:
-                  Icon(Icons.dns_outlined, color: Colors.white),
+              prefixIcon: Icon(Icons.dns_outlined, color: Colors.white),
               hintText: 'Ex: 192.168.0.10',
               hintStyle: kHintTextStyle,
             ),
@@ -210,6 +227,33 @@ class _ServerIpPageState extends State<ServerIpPage> {
             'URL: http://${_ipController.text.isEmpty ? '<IP>' : _ipController.text}:$apiPort$apiPath',
             style: const TextStyle(
                 color: Colors.white54, fontSize: 11, fontFamily: 'OpenSans'),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildInstitutionField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('Estabelecimento', style: kLabelStyle),
+        const SizedBox(height: 10),
+        Container(
+          decoration: kBoxDecorationStyle,
+          child: TextFormField(
+            controller: _institutionController,
+            keyboardType: TextInputType.text,
+            textInputAction: TextInputAction.done,
+            validator: _validateInstitution,
+            style: const TextStyle(color: Colors.white, fontFamily: 'OpenSans'),
+            decoration: const InputDecoration(
+              border: InputBorder.none,
+              contentPadding: EdgeInsets.only(top: 14),
+              prefixIcon: Icon(Icons.business_outlined, color: Colors.white),
+              hintText: 'Ex: Código da Minha Empresa',
+              hintStyle: kHintTextStyle,
+            ),
           ),
         ),
       ],

@@ -159,6 +159,12 @@ class _BudgetRegisterPageState extends State<BudgetRegisterPage> {
       );
       return;
     }
+    if (state.budget.paymentTypeId == 0 || state.budget.paymentTerms.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Informe a forma de pagamento antes de enviar.')),
+      );
+      return;
+    }
     if (state.items.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -390,7 +396,7 @@ class _BudgetRegisterPageState extends State<BudgetRegisterPage> {
             const Divider(height: 32),
 
             // ── Totals ───────────────────────────────────────────────────
-            _TotalsCard(budget: budget, currencyFmt: _currencyFmt),
+            _TotalsCard(items: state.items, budget: budget, currencyFmt: _currencyFmt),
 
             if (!isViewMode) ...[
               const SizedBox(height: 24),
@@ -510,13 +516,27 @@ class _ItemTile extends StatelessWidget {
 }
 
 class _TotalsCard extends StatelessWidget {
-  const _TotalsCard({required this.budget, required this.currencyFmt});
+  const _TotalsCard({
+    required this.items,
+    required this.budget,
+    required this.currencyFmt,
+  });
 
+  final List<BudgetItemEntity> items;
   final BudgetEntity budget;
   final NumberFormat currencyFmt;
 
   @override
   Widget build(BuildContext context) {
+    double totalProducts = 0;
+    double totalDiscount = 0;
+    for (final item in items) {
+      totalProducts += item.subtotal;
+      totalDiscount += item.discountValue;
+    }
+    final subtotal = totalProducts - totalDiscount;
+    final total = subtotal + budget.freight;
+
     return Card(
       color: Theme.of(context).colorScheme.surfaceContainerHighest,
       child: Padding(
@@ -524,14 +544,14 @@ class _TotalsCard extends StatelessWidget {
         child: Column(
           children: [
             _TotalRow('Produtos',
-                currencyFmt.format(budget.totalProducts), false),
+                currencyFmt.format(totalProducts), false),
             if (budget.freight > 0)
               _TotalRow('Frete', currencyFmt.format(budget.freight), false),
-            if (budget.discountValue > 0)
+            if (totalDiscount > 0)
               _TotalRow('Desconto',
-                  '- ${currencyFmt.format(budget.discountValue)}', false),
+                  '- ${currencyFmt.format(totalDiscount)}', false),
             const Divider(),
-            _TotalRow('Total', currencyFmt.format(budget.total), true),
+            _TotalRow('Total', currencyFmt.format(total), true),
           ],
         ),
       ),

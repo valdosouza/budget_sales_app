@@ -1,3 +1,4 @@
+import 'package:budget_sales/app/core/shared/helpers/local_storage.dart';
 import 'package:budget_sales/app/modules/budget/domain/entity/budget_entity.dart';
 import 'package:budget_sales/app/modules/budget/domain/usecase/budget_usecases.dart';
 import 'package:budget_sales/app/modules/budget/presentation/bloc/budget_register_event.dart';
@@ -76,11 +77,19 @@ class BudgetRegisterBloc
     final now = DateTime.now();
     final dateStr =
         '${now.day.toString().padLeft(2, '0')}/${now.month.toString().padLeft(2, '0')}/${now.year}';
+
+    // Get institutionId from saved establishment
+    final institutionValue = await LocalStorageService.instance
+        .get(key: 'institution', defaultValue: '');
+
+    final institutionId = int.tryParse(institutionValue?.toString() ?? '') ?? 0;
+
     final newBudget = BudgetEntity.empty().copyWith(
       userId: event.userId,
       salesmanId: event.salesmanId,
       date: dateStr,
       status: 'N',
+      institutionId: institutionId,
     );
     final result = await saveLocalBudget(newBudget);
     result.fold(
@@ -207,6 +216,9 @@ class BudgetRegisterBloc
     emit(current.copyWith(isSaving: true));
 
     try {
+      // Debug: log data being sent
+      debugPrint('Budget data to submit - Date: ${current.budget.date}, InstitutionId: ${current.budget.institutionId}');
+
       // 1. Create budget on remote
       final budgetResult = await createBudget(current.budget);
       await budgetResult.fold(

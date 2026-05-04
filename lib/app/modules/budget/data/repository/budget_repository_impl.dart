@@ -38,12 +38,14 @@ class BudgetRepositoryImpl implements BudgetRepository {
     String? dateStart,
     String? dateEnd,
     String? customerName,
+    int? institutionId,
   }) =>
       _handle(() => remote.getBudgets(
             number: number,
             dateStart: dateStart,
             dateEnd: dateEnd,
             customerName: customerName,
+            institutionId: institutionId,
           ));
 
   @override

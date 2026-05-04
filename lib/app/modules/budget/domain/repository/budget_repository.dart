@@ -13,6 +13,7 @@ abstract class BudgetRepository {
     String? dateStart,
     String? dateEnd,
     String? customerName,
+    int? institutionId,
   });
 
   Future<Either<Failure, BudgetEntity>> getBudgetById(int id);

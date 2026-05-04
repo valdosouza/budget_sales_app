@@ -21,7 +21,7 @@ class BudgetEntity extends Equatable {
     required this.validity,
     required this.deliveryTime,
     required this.salesmanId,
-    required this.warehouseId,
+    required this.institutionId,
     required this.status,
   });
 
@@ -44,7 +44,7 @@ class BudgetEntity extends Equatable {
   final String validity;
   final String deliveryTime;
   final int salesmanId;
-  final int warehouseId;
+  final int institutionId;
   final String status;
 
   static BudgetEntity empty() => const BudgetEntity(
@@ -67,7 +67,7 @@ class BudgetEntity extends Equatable {
         validity: '',
         deliveryTime: '',
         salesmanId: 0,
-        warehouseId: 0,
+        institutionId: 0,
         status: 'N',
       );
 
@@ -91,7 +91,7 @@ class BudgetEntity extends Equatable {
     String? validity,
     String? deliveryTime,
     int? salesmanId,
-    int? warehouseId,
+    int? institutionId,
     String? status,
   }) {
     return BudgetEntity(
@@ -114,7 +114,7 @@ class BudgetEntity extends Equatable {
       validity: validity ?? this.validity,
       deliveryTime: deliveryTime ?? this.deliveryTime,
       salesmanId: salesmanId ?? this.salesmanId,
-      warehouseId: warehouseId ?? this.warehouseId,
+      institutionId: institutionId ?? this.institutionId,
       status: status ?? this.status,
     );
   }
@@ -124,6 +124,6 @@ class BudgetEntity extends Equatable {
         id, orderId, number, userId, date, customerId, customerName,
         paymentTypeId, paymentTerms, quantityProducts, totalProducts,
         freight, discountPercent, discountValue, total, contact,
-        validity, deliveryTime, salesmanId, warehouseId, status,
+        validity, deliveryTime, salesmanId, institutionId, status,
       ];
 }
